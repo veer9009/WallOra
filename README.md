@@ -13,3 +13,5 @@ npm run dev
 ```
 
 The admin flow is intentionally front-end only for this prototype. A production version should add authentication, server-side image storage, and a protected upload API.
+
+CI/CD webhook test
