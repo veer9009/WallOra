@@ -4,12 +4,6 @@ pipeline {
 
     stages {
 
-        stage('Checkout') {
-            steps {
-                git 'https://github.com/veer9009/WallOra.git'
-            }
-        }
-
         stage('Build Docker Image') {
             steps {
                 sh '''
