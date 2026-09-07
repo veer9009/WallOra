@@ -24,9 +24,12 @@ const starterWallpapers: Wallpaper[] = [
 ]
 
 const categories = ['All walls', 'Abstract', 'Nature', 'City', 'Minimal', 'Gradient']
+const ADMIN_USERNAME = 'admin@wallora.com'
+const ADMIN_PASSWORD = 'WallOra2026'
 
 function App() {
   const [isAdmin, setIsAdmin] = useState(false)
+  const [showLogin, setShowLogin] = useState(false)
   const [activeCategory, setActiveCategory] = useState('All walls')
   const [query, setQuery] = useState('')
   const [wallpapers, setWallpapers] = useState(starterWallpapers)
@@ -62,7 +65,7 @@ function App() {
       <header className="topbar">
         <a className="brand" href="#top" aria-label="WallOra home"><span className="brand-mark">W</span><span>Wall<span>Ora</span></span></a>
         <nav className="main-nav" aria-label="Main navigation"><a className={!isAdmin ? 'active' : ''} href="#gallery" onClick={() => setIsAdmin(false)}>Explore</a><a href="#collections">Collections</a><a href="#about">About</a></nav>
-        <div className="top-actions"><button className="icon-button" aria-label="Search" onClick={() => document.getElementById('search')?.focus()}>⌕</button><button className={`admin-switch ${isAdmin ? 'selected' : ''}`} onClick={() => setIsAdmin(!isAdmin)}><span className="status-dot" />{isAdmin ? 'Admin view' : 'Admin login'}</button></div>
+        <div className="top-actions"><button className="icon-button" aria-label="Search" onClick={() => document.getElementById('search')?.focus()}>⌕</button><button className={`admin-switch ${isAdmin ? 'selected' : ''}`} onClick={() => isAdmin ? setIsAdmin(false) : setShowLogin(true)}><span className="status-dot" />{isAdmin ? 'Admin view' : 'Admin login'}</button></div>
       </header>
 
       {isAdmin ? <AdminPanel onSubmit={addWallpaper} onBack={() => setIsAdmin(false)} /> : <>
@@ -71,6 +74,7 @@ function App() {
         <section className="manifesto" id="about"><p className="eyebrow">Why WallOra</p><h2>Less noise.<br /><em>More atmosphere.</em></h2><p>We believe the image behind your windows should feel like a small daily ritual. Every wall is selected for mood, detail, and the way it holds up over time.</p><span className="manifesto-line" /></section>
         <footer><span>© 2026 WallOra</span><span>Made for the in-between moments</span><a href="#top">Back to top ↑</a></footer>
       </>}
+      {showLogin && <LoginModal onClose={() => setShowLogin(false)} onLogin={() => { setIsAdmin(true); setShowLogin(false) }} />}
       {notice && <div className="toast" role="status"><span>✓</span>{notice}</div>}
     </main>
   )
@@ -78,6 +82,23 @@ function App() {
 
 function WallpaperCard({ wallpaper, onDownload }: { wallpaper: Wallpaper; onDownload: (title: string) => void }) {
   return <article className="wall-card"><div className="wall-image" style={{ backgroundImage: `url(${wallpaper.image})`, backgroundColor: wallpaper.accent }}><span className="size-tag">{wallpaper.size}</span><button className="download-button" onClick={() => onDownload(wallpaper.title)} aria-label={`Download ${wallpaper.title}`}>↓</button></div><div className="card-meta"><div><h3>{wallpaper.title}</h3><p>{wallpaper.creator} <span>·</span> {wallpaper.category}</p></div><span className="downloads">↓ {wallpaper.downloads}</span></div></article>
+}
+
+function LoginModal({ onClose, onLogin }: { onClose: () => void; onLogin: () => void }) {
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (username.trim().toLowerCase() === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+      onLogin()
+      return
+    }
+    setError('That username or password is not correct.')
+  }
+
+  return <div className="login-backdrop" role="dialog" aria-modal="true" aria-labelledby="login-title"><form className="login-card" onSubmit={handleSubmit}><button type="button" className="login-close" onClick={onClose} aria-label="Close login">×</button><p className="eyebrow">Private workspace</p><h2 id="login-title">Welcome back, <em>admin.</em></h2><p className="login-copy">Sign in to publish new wallpapers to WallOra.</p><label>Username<input value={username} onChange={(event) => setUsername(event.target.value)} type="email" placeholder={ADMIN_USERNAME} autoComplete="username" required /></label><label>Password<input value={password} onChange={(event) => setPassword(event.target.value)} type="password" placeholder="Your password" autoComplete="current-password" required /></label>{error && <p className="login-error" role="alert">{error}</p>}<button className="publish-button" type="submit">Enter admin workspace <span>↗</span></button></form></div>
 }
 
 function AdminPanel({ onSubmit, onBack }: { onSubmit: (event: FormEvent<HTMLFormElement>) => void; onBack: () => void }) {
