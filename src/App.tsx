@@ -27,12 +27,17 @@ const categories = ['All walls', 'Abstract', 'Nature', 'City', 'Minimal', 'Gradi
 
 function App() {
   const [isAdmin, setIsAdmin] = useState(false)
+  const [showLogin, setShowLogin] = useState(false)
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
+  const [loginError, setLoginError] = useState('')
   const [activeCategory, setActiveCategory] = useState('All walls')
   const [query, setQuery] = useState('')
   const [wallpapers, setWallpapers] = useState(starterWallpapers)
   const [notice, setNotice] = useState('')
 
   const visibleWallpapers = useMemo(() => wallpapers.filter((wallpaper) => {
+
     const matchesCategory = activeCategory === 'All walls' || wallpaper.category === activeCategory
     const searchText = `${wallpaper.title} ${wallpaper.creator} ${wallpaper.category}`.toLowerCase()
     return matchesCategory && searchText.includes(query.toLowerCase())
@@ -41,6 +46,20 @@ function App() {
   function handleDownload(title: string) {
     setNotice(`${title} is ready to download.`)
     window.setTimeout(() => setNotice(''), 2600)
+  }
+
+  function handleAdminLogin(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+
+    if (username === "admin" && password === "wallora123") {
+      setIsAdmin(true)
+      setShowLogin(false)
+      setLoginError("")
+      setUsername("")
+      setPassword("")
+    } else {
+      setLoginError("Invalid username or password")
+    }
   }
 
   function addWallpaper(event: FormEvent<HTMLFormElement>) {
@@ -62,8 +81,10 @@ function App() {
       <header className="topbar">
         <a className="brand" href="#top" aria-label="WallOra home"><span className="brand-mark">W</span><span>Wall<span>Ora</span></span></a>
         <nav className="main-nav" aria-label="Main navigation"><a className={!isAdmin ? 'active' : ''} href="#gallery" onClick={() => setIsAdmin(false)}>Explore</a><a href="#collections">Collections</a><a href="#about">About</a></nav>
-        <div className="top-actions"><button className="icon-button" aria-label="Search" onClick={() => document.getElementById('search')?.focus()}>⌕</button><button className={`admin-switch ${isAdmin ? 'selected' : ''}`} onClick={() => setIsAdmin(!isAdmin)}><span className="status-dot" />{isAdmin ? 'Admin view' : 'Admin login'}</button></div>
+        <div className="top-actions"><button className="icon-button" aria-label="Search" onClick={() => document.getElementById('search')?.focus()}>⌕</button><button className={`admin-switch ${isAdmin ? 'selected' : ''}`} onClick={() => { if (isAdmin) { setIsAdmin(false) } else { setShowLogin(true) } }}><span className="status-dot" />{isAdmin ? 'Admin view' : 'Admin login'}</button></div>
       </header>
+
+      {showLogin && !isAdmin && <section className="admin-panel"><div className="admin-heading"><div><p className="eyebrow">Private workspace</p><h1>WallOra <em>Admin Login.</em></h1><p>Sign in to manage wallpapers.</p></div><button className="back-button" onClick={() => { setShowLogin(false); setLoginError("") }}>← Back to gallery</button></div><div className="admin-content"><form className="upload-form" onSubmit={handleAdminLogin}><label>Username<input value={username} onChange={(event) => setUsername(event.target.value)} placeholder="Enter username" required /></label><label>Password<input type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Enter password" required /></label>{loginError && <p>{loginError}</p>}<button className="publish-button" type="submit">Login <span>↗</span></button></form></div></section>}
 
       {isAdmin ? <AdminPanel onSubmit={addWallpaper} onBack={() => setIsAdmin(false)} /> : <>
         <section className="hero" id="top"><div className="hero-copy"><p className="eyebrow"><span /> Curated for your screen</p><h1>Give your screen<br /><em>some feeling.</em></h1><p className="hero-text">A considered collection of wallpapers for the moments between work, wonder, and everything in between.</p><a className="text-link" href="#gallery">Browse all walls <span>↘</span></a></div><div className="hero-art" aria-label="Featured wallpaper preview"><div className="art-orbit orbit-one" /><div className="art-orbit orbit-two" /><div className="art-sun" /><div className="art-landscape" /><div className="art-caption"><span>01 / 08</span><strong>Quiet Geometry</strong></div></div></section>
