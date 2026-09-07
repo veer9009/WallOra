@@ -24,18 +24,20 @@ const starterWallpapers: Wallpaper[] = [
 ]
 
 const categories = ['All walls', 'Abstract', 'Nature', 'City', 'Minimal', 'Gradient']
-const ADMIN_USERNAME = 'admin@wallora.com'
-const ADMIN_PASSWORD = 'WallOra2026'
 
 function App() {
   const [isAdmin, setIsAdmin] = useState(false)
   const [showLogin, setShowLogin] = useState(false)
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
+  const [loginError, setLoginError] = useState('')
   const [activeCategory, setActiveCategory] = useState('All walls')
   const [query, setQuery] = useState('')
   const [wallpapers, setWallpapers] = useState(starterWallpapers)
   const [notice, setNotice] = useState('')
 
   const visibleWallpapers = useMemo(() => wallpapers.filter((wallpaper) => {
+
     const matchesCategory = activeCategory === 'All walls' || wallpaper.category === activeCategory
     const searchText = `${wallpaper.title} ${wallpaper.creator} ${wallpaper.category}`.toLowerCase()
     return matchesCategory && searchText.includes(query.toLowerCase())
@@ -44,6 +46,20 @@ function App() {
   function handleDownload(title: string) {
     setNotice(`${title} is ready to download.`)
     window.setTimeout(() => setNotice(''), 2600)
+  }
+
+  function handleAdminLogin(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+
+    if (username === "admin" && password === "wallora123") {
+      setIsAdmin(true)
+      setShowLogin(false)
+      setLoginError("")
+      setUsername("")
+      setPassword("")
+    } else {
+      setLoginError("Invalid username or password")
+    }
   }
 
   function addWallpaper(event: FormEvent<HTMLFormElement>) {
@@ -65,8 +81,10 @@ function App() {
       <header className="topbar">
         <a className="brand" href="#top" aria-label="WallOra home"><span className="brand-mark">W</span><span>Wall<span>Ora</span></span></a>
         <nav className="main-nav" aria-label="Main navigation"><a className={!isAdmin ? 'active' : ''} href="#gallery" onClick={() => setIsAdmin(false)}>Explore</a><a href="#collections">Collections</a><a href="#about">About</a></nav>
-        <div className="top-actions"><button className="icon-button" aria-label="Search" onClick={() => document.getElementById('search')?.focus()}>⌕</button><button className={`admin-switch ${isAdmin ? 'selected' : ''}`} onClick={() => isAdmin ? setIsAdmin(false) : setShowLogin(true)}><span className="status-dot" />{isAdmin ? 'Admin view' : 'Admin login'}</button></div>
+        <div className="top-actions"><button className="icon-button" aria-label="Search" onClick={() => document.getElementById('search')?.focus()}>⌕</button><button className={`admin-switch ${isAdmin ? 'selected' : ''}`} onClick={() => { if (isAdmin) { setIsAdmin(false) } else { setShowLogin(true) } }}><span className="status-dot" />{isAdmin ? 'Admin view' : 'Admin login'}</button></div>
       </header>
+
+      {showLogin && !isAdmin && <section className="admin-panel"><div className="admin-heading"><div><p className="eyebrow">Private workspace</p><h1>WallOra <em>Admin Login.</em></h1><p>Sign in to manage wallpapers.</p></div><button className="back-button" onClick={() => { setShowLogin(false); setLoginError("") }}>← Back to gallery</button></div><div className="admin-content"><form className="upload-form" onSubmit={handleAdminLogin}><label>Username<input value={username} onChange={(event) => setUsername(event.target.value)} placeholder="Enter username" required /></label><label>Password<input type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Enter password" required /></label>{loginError && <p>{loginError}</p>}<button className="publish-button" type="submit">Login <span>↗</span></button></form></div></section>}
 
       {isAdmin ? <AdminPanel onSubmit={addWallpaper} onBack={() => setIsAdmin(false)} /> : <>
         <section className="hero" id="top"><div className="hero-copy"><p className="eyebrow"><span /> Curated for your screen</p><h1>Give your screen<br /><em>some feeling.</em></h1><p className="hero-text">A considered collection of wallpapers for the moments between work, wonder, and everything in between.</p><a className="text-link" href="#gallery">Browse all walls <span>↘</span></a></div><div className="hero-art" aria-label="Featured wallpaper preview"><div className="art-orbit orbit-one" /><div className="art-orbit orbit-two" /><div className="art-sun" /><div className="art-landscape" /><div className="art-caption"><span>01 / 08</span><strong>Quiet Geometry</strong></div></div></section>
@@ -74,7 +92,6 @@ function App() {
         <section className="manifesto" id="about"><p className="eyebrow">Why WallOra</p><h2>Less noise.<br /><em>More atmosphere.</em></h2><p>We believe the image behind your windows should feel like a small daily ritual. Every wall is selected for mood, detail, and the way it holds up over time.</p><span className="manifesto-line" /></section>
         <footer><span>© 2026 WallOra</span><span>Made for the in-between moments</span><a href="#top">Back to top ↑</a></footer>
       </>}
-      {showLogin && <LoginModal onClose={() => setShowLogin(false)} onLogin={() => { setIsAdmin(true); setShowLogin(false) }} />}
       {notice && <div className="toast" role="status"><span>✓</span>{notice}</div>}
     </main>
   )
@@ -82,23 +99,6 @@ function App() {
 
 function WallpaperCard({ wallpaper, onDownload }: { wallpaper: Wallpaper; onDownload: (title: string) => void }) {
   return <article className="wall-card"><div className="wall-image" style={{ backgroundImage: `url(${wallpaper.image})`, backgroundColor: wallpaper.accent }}><span className="size-tag">{wallpaper.size}</span><button className="download-button" onClick={() => onDownload(wallpaper.title)} aria-label={`Download ${wallpaper.title}`}>↓</button></div><div className="card-meta"><div><h3>{wallpaper.title}</h3><p>{wallpaper.creator} <span>·</span> {wallpaper.category}</p></div><span className="downloads">↓ {wallpaper.downloads}</span></div></article>
-}
-
-function LoginModal({ onClose, onLogin }: { onClose: () => void; onLogin: () => void }) {
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
-
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    if (username.trim().toLowerCase() === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
-      onLogin()
-      return
-    }
-    setError('That username or password is not correct.')
-  }
-
-  return <div className="login-backdrop" role="dialog" aria-modal="true" aria-labelledby="login-title"><form className="login-card" onSubmit={handleSubmit}><button type="button" className="login-close" onClick={onClose} aria-label="Close login">×</button><p className="eyebrow">Private workspace</p><h2 id="login-title">Welcome back, <em>admin.</em></h2><p className="login-copy">Sign in to publish new wallpapers to WallOra.</p><label>Username<input value={username} onChange={(event) => setUsername(event.target.value)} type="email" placeholder={ADMIN_USERNAME} autoComplete="username" required /></label><label>Password<input value={password} onChange={(event) => setPassword(event.target.value)} type="password" placeholder="Your password" autoComplete="current-password" required /></label>{error && <p className="login-error" role="alert">{error}</p>}<button className="publish-button" type="submit">Enter admin workspace <span>↗</span></button></form></div>
 }
 
 function AdminPanel({ onSubmit, onBack }: { onSubmit: (event: FormEvent<HTMLFormElement>) => void; onBack: () => void }) {

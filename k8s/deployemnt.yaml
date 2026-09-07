@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: wallora-deployment
+
+spec:
+  replicas: 2
+
+  selector:
+    matchLabels:
+      app: wallora
+
+  template:
+    metadata:
+      labels:
+        app: wallora
+
+    spec:
+      containers:
+        - name: wallora
+          image: aligarveeresh/wallora:1.0
+          imagePullPolicy: Always
+
+          ports:
+            - containerPort: 80
